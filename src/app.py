@@ -83,6 +83,12 @@ def predict_exercise(model, df):
     """
     모델이 예측할 수 있도록 입력 데이터를 전처리하는 함수.
     """
+    df = df.rename(columns={
+        "sbp": "systolic_bp",
+        "dbp": "diastolic_bp",
+        "sleep": "sleep_hours",
+        "tg": "triglyceride" # 중성지방도 이름이 다를 수 있으니 확인!
+    })
 
     # risk_score는 df 안에 이미 들어 있다고 가정
     risk_score = df["risk_score"].iloc[0]

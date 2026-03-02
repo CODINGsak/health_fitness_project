@@ -40,6 +40,6 @@ def calculate_risk_score(row):
 
 def add_features(df):
     """BMI, 위험 점수 등 새로운 feature를 추가하는 메인 함수"""
-    df["bmi"] = df.apply(calculate_bmi, axis=1)
+    df["bmi"] = df["weight"] / ((df["height"] / 100) ** 2)
     df["risk_score"] = df.apply(calculate_risk_score, axis=1)
     return df
