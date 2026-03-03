@@ -3,13 +3,13 @@ import pandas as pd
 import pickle
 
 # ---------------------------------------------------------
-# 1) 저장된 모델 불러오기
+# 1) 保存されたモデル呼出
 # ---------------------------------------------------------
 @st.cache_resource
 def load_model(path):
     """
-    pickle로 저장된 머신러닝 모델을 불러오는 함수.
-    Streamlit에서는 매번 다시 로드하지 않도록 cache 사용.
+    pickle形式で保存された学習済みモデルをロードする関数
+    Streamlitでの再ロードを避けるため、キャッシュ機能（cache_resource）を使用
     """
     with open(path, "rb") as f:
         model = pickle.load(f)
@@ -17,33 +17,33 @@ def load_model(path):
 
 
 # ---------------------------------------------------------
-# 2) 사용자 입력 UI 구성
+# 2) ユーザー入力
 # ---------------------------------------------------------
 def user_input_form():
-    st.header("🏋️ 건강 정보 입력")
+    st.header("🏋️ 健康情報の入力")
 
-    age = st.number_input("나이", min_value=1, max_value=120, value=30)
-    gender = st.selectbox("성별", ["M", "F"])
-    height = st.number_input("키(cm)", min_value=100, max_value=250, value=170)
-    weight = st.number_input("몸무게(kg)", min_value=30, max_value=200, value=70)
+    age = st.number_input("年齢", min_value=1, max_value=120, value=30)
+    gender = st.selectbox("性別", ["M", "F"])
+    height = st.number_input("身長(cm)", min_value=100, max_value=250, value=170)
+    weight = st.number_input("体重(kg)", min_value=30, max_value=200, value=70)
 
-    # 🔥 BMI 자동 계산
+    #BMI
     bmi = weight / ((height / 100) ** 2)
-    st.markdown(f"**📌 자동 계산된 BMI:** `{bmi:.2f}`")
+    st.markdown(f"**📌 自動算出されたBMI:** `{bmi:.2f}`")
 
-    body_fat = st.number_input("체지방률(%)", min_value=1.0, max_value=60.0, value=20.0)
-    sbp = st.number_input("수축기 혈압", min_value=80, max_value=200, value=120)
-    dbp = st.number_input("이완기 혈압", min_value=50, max_value=130, value=80)
-    glucose = st.number_input("공복 혈당", min_value=60, max_value=200, value=100)
-    ldl = st.number_input("LDL 콜레스테롤", min_value=50, max_value=300, value=120)
-    hdl = st.number_input("HDL 콜레스테롤", min_value=20, max_value=100, value=50)
-    tg = st.number_input("중성지방", min_value=30, max_value=500, value=120)
+    body_fat = st.number_input("体脂肪率(%)", min_value=1.0, max_value=60.0, value=20.0)
+    sbp = st.number_input("収縮期血圧", min_value=80, max_value=200, value=120)
+    dbp = st.number_input("拡張期血圧", min_value=50, max_value=130, value=80)
+    glucose = st.number_input("空腹時血糖値", min_value=60, max_value=200, value=100)
+    ldl = st.number_input("LDL", min_value=50, max_value=300, value=120)
+    hdl = st.number_input("HDL", min_value=20, max_value=100, value=50)
+    tg = st.number_input("中性脂肪", min_value=30, max_value=500, value=120)
     ast = st.number_input("AST", min_value=5, max_value=200, value=25)
     alt = st.number_input("ALT", min_value=5, max_value=200, value=25)
-    steps = st.number_input("하루 걸음 수", min_value=0, max_value=50000, value=5000)
-    sleep = st.number_input("수면 시간(시간)", min_value=0.0, max_value=24.0, value=7.0)
+    steps = st.number_input("1日の歩数", min_value=0, max_value=50000, value=5000)
+    sleep = st.number_input("睡眠時間", min_value=0.0, max_value=24.0, value=7.0)
 
-    # 🔥 risk_score 자동 계산
+    # 🔥 risk_score
     risk_score = (
         (sbp - 120) * 0.3 +
         (dbp - 80) * 0.2 +
@@ -51,9 +51,9 @@ def user_input_form():
         (body_fat - 20) * 0.2
     )
 
-    st.markdown(f"**📊 자동 계산된 위험도 점수(Risk Score):** `{risk_score:.2f}`")
+    st.markdown(f"**📊 リスクスコア(Risk Score):** `{risk_score:.2f}`")
 
-    # DataFrame 생성
+    # DataFrame
     df = pd.DataFrame({
         "age": [age],
         "gender": [gender],
@@ -71,26 +71,26 @@ def user_input_form():
         "alt": [alt],
         "steps": [steps],
         "sleep": [sleep],
-        "risk_score": [risk_score]   # 🔥 추가됨
+        "risk_score": [risk_score]
     })
 
     return df
 
 # ---------------------------------------------------------
-# 3) 모델 예측 함수
+# 3) モデルによる予測
 # ---------------------------------------------------------
 def predict_exercise(model, df):
     """
-    모델이 예측할 수 있도록 입력 데이터를 전처리하는 함수.
+    モデル推論用に入力データを前処理する関数
     """
     df = df.rename(columns={
         "sbp": "systolic_bp",
         "dbp": "diastolic_bp",
         "sleep": "sleep_hours",
-        "tg": "triglyceride" # 중성지방도 이름이 다를 수 있으니 확인!
+        "tg": "triglyceride"
     })
 
-    # risk_score는 df 안에 이미 들어 있다고 가정
+    # risk_scoreはdf内に含まれていると想定
     risk_score = df["risk_score"].iloc[0]
 
     # gender(M/F) → one-hot encoding
@@ -115,49 +115,46 @@ def predict_exercise(model, df):
     return pred, risk_score
 
 # ---------------------------------------------------------
-# 4) Streamlit 메인 실행
+# 4) Streamlit 実行
 # ---------------------------------------------------------
 def main():
-    st.title("🏃 건강 기반 운동 추천 시스템")
+    st.title("🏃 ヘルスケアデータに基づく運動推奨システム")
 
-    # 모델 불러오기
     dt_model = load_model("../models/decision_tree.pkl")
-
-    # 사용자 입력
     user_df = user_input_form()
 
-    if st.button("운동 추천 받기"):
+    if st.button("おすすめの運動を診断する"):
         # 🔍 입력값 검증
         if user_df["height"].iloc[0] <= 0:
-            st.error("❗ 키는 0보다 커야 합니다.")
+            st.error("❗ 身長は0より大きい値を入力してください。")
             return
 
         if user_df["weight"].iloc[0] <= 0:
-            st.error("❗ 몸무게는 0보다 커야 합니다.")
+            st.error("❗ 体重は0より大きい値を入力してください。")
             return
 
         if user_df["sleep"].iloc[0] > 24:
-            st.error("❗ 수면 시간은 24시간을 넘을 수 없습니다.")
+            st.error("❗ 睡眠時間は24時間を超えることはできません。")
             return
 
         if user_df["sbp"].iloc[0] < user_df["dbp"].iloc[0]:
-            st.error("❗ 수축기 혈압은 이완기 혈압보다 커야 합니다.")
+            st.error("❗ 収縮期血圧は拡張期血圧より高い必要があります。")
             return
 
-        # 🔥 정상 입력이면 예측 실행
+        # 正常な入力値の場合、予測を実行
         pred, risk_score = predict_exercise(dt_model, user_df)
 
-        # 숫자 라벨 → 문자열 라벨 매핑
+        # 数値ラベルから文字列ラベルへのマッピング
         label_map = {
-            0: "근력",
-            1: "스트레칭",
-            2: "유산소",
-            3: "유산소+근력"
+            0: "筋力トレーニング",
+            1: "ストレッチ",
+            2: "有酸素運動",
+            3: "有酸素運動+筋トレ"
         }
 
-        exercise_type = label_map.get(pred, "알 수 없음")
+        exercise_type = label_map.get(pred, "不明")
 
-        # 🔥 추천 결과 카드 UI
+        # 結果 UI
         st.markdown(
             f"""
             <div style="
@@ -168,7 +165,7 @@ def main():
                 box-shadow: 0 4px 8px rgba(0,0,0,0.05);
                 margin-top: 20px;
             ">
-                <h3 style="color: #1a73e8; margin-bottom: 10px;">🏋️ 추천 운동 유형</h3>
+                <h3 style="color: #1a73e8; margin-bottom: 10px;">🏋️ 推奨される運動タイプ</h3>
                 <p style="font-size: 22px; font-weight: bold; color: #333;">
                     {exercise_type}
                 </p>
@@ -177,22 +174,21 @@ def main():
             unsafe_allow_html=True
         )
 
-        # 🔥 risk_score 시각화
-        st.subheader("📊 건강 위험도 점수 (Risk Score)")
-        st.write(f"**현재 위험도:** {risk_score:.2f}")
+        # 🔥 risk_score visualize
+        st.subheader("📊 リスクスコア (Risk Score)")
+        st.write(f"**現在のリスク度:** {risk_score:.2f}")
 
-        # progress bar는 0~100 기준이므로 risk_score를 그대로 사용하기 어렵기 때문에
-        # 적당한 스케일링을 적용 (0~20 범위를 0~100으로 변환)
+        # プログレスバーは0〜100基準のため、
+        # risk_scoreに適したスケーリングを適用（0〜20の範囲を0〜100に変換）
         scaled_score = min(max(risk_score * 5, 0), 100)
         st.progress(int(scaled_score))
 
-        # 상태 메시지 (직관적인 기준)
         if risk_score < 5:
-            st.success("🟢 건강 상태 양호")
+            st.success("🟢 良好")
         elif risk_score < 15:
-            st.warning("🟡 주의 필요")
+            st.warning("🟡 注意")
         else:
-            st.error("🔴 건강 관리가 필요합니다")
+            st.error("🔴 要管理")
 
 if __name__ == "__main__":
     main()

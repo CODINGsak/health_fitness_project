@@ -4,7 +4,7 @@ from preprocess import preprocess_data
 from feature_engineering import add_features
 from rule_based_recommender import RuleBasedRecommender
 
-# 1) 테스트용 더미 데이터 생성
+# 1) テスト用データ
 data = {
     "height": [170, 165, 180],
     "weight": [70, 85, 60],
@@ -16,15 +16,15 @@ data = {
 
 df = pd.DataFrame(data)
 
-# 2) 전처리 라벨링
+# 2) 全処理ラベリング
 df = preprocess_data(df)
 
 # 3) feature engineering
 df = add_features(df)
 
-# 4) 규칙 기반 추천
+# 4) オススメ
 recommender = RuleBasedRecommender()
 df = recommender.apply_recommendation(df)
 
-# 5) 결과 출력
+# 5) 結果出力
 print(df)

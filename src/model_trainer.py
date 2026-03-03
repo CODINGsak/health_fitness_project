@@ -6,39 +6,37 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, classification_report
 import pickle
 import os
-# sklearn:전통적인 머신러닝의 표준 도구 상자
 # ---------------------------------------------------------
-# 1) 데이터 로드 함수
+# 1) data load
 # ---------------------------------------------------------
 def load_data(path="data/processed/health_data_processed.csv"):
     """
-    전처리 + feature engineering까지 완료된 CSV 파일을 불러오는 함수.
-    모델 학습 단계에서는 항상 '정제된 데이터'를 사용해야 함.
+    前処理と特徴量エンジニアリングが完了したCSVファイルをロードする関数
+    モデルの学習フェーズでは常に「精製されたデータ」を使用する必要がある
     """
     return pd.read_csv(path)
 
 
 # ---------------------------------------------------------
-# 2) Feature / Label 분리 + 인코딩
+# 2) Feature / Label
 # ---------------------------------------------------------
 def prepare_features(df):
     """
-    머신러닝 모델에 입력할 X(특징)와 y(라벨)를 준비하는 함수.
-
-    - gender는 문자열(M/F)이므로 one-hot encoding 필요
-    - exercise_label은 문자열이므로 LabelEncoder로 숫자 변환
+    機械学習モデルに入力する特徴量(X)とラベル(y)を準備する関数
+    - genderは文字列(M/F)のため、One-Hotエンコーディングが必要
+    - exercise_labelは文字列のため、LabelEncoderで数値に変換
     """
 
-    # gender → one-hot encoding (문자열을 0/1 컬럼으로 변환)
+    # gender → one-hot encoding
     df = pd.get_dummies(df, columns=["gender"], drop_first=True)
 
-    # y: 예측해야 하는 운동 추천 라벨
+    # y: オススメ運動ラベル
     y = df["exercise_label"]
 
-    # X: 라벨을 제외한 모든 feature
+    # X: ラベルを除外した全ての feature
     X = df.drop(columns=["exercise_label"])
 
-    # 문자열 라벨을 숫자로 변환 (예: 유산소 → 0, 근력 → 1 ...)
+    # 文字列ラベルを数字に変換
     le = LabelEncoder()
     y_encoded = le.fit_transform(y)
 
@@ -46,32 +44,30 @@ def prepare_features(df):
 
 
 # ---------------------------------------------------------
-# 3) 모델 학습 함수
+# 3) モデル学習
 # ---------------------------------------------------------
 def train_models(X, y):
     """
-    KNN, Decision Tree 두 가지 모델을 학습시키고
-    성능을 출력하는 함수.
-
-    - train_test_split: 학습/테스트 데이터 분리
-    - KNN: 가까운 이웃 기반 분류
-    - Decision Tree: 규칙 기반 트리 모델
+    KNNと意思決定木の2つのモデルを学習させ、性能を出力する関数
+    - train_test_split: 学習用データとテスト用データの分割
+    - KNN: 近傍法による分類
+    - Decision Tree: ルールベースの木構造モデル
     """
 
-    # 데이터 분리 (20%는 테스트용)
+    # データの分割（20%をテスト用として使用）
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42
     )
 
     # -------------------------
-    # KNN 모델 학습
+    # KNN モデル学習
     # -------------------------
     knn = KNeighborsClassifier(n_neighbors=5)
     knn.fit(X_train, y_train)
     knn_pred = knn.predict(X_test)
 
     # -------------------------
-    # Decision Tree 모델 학습
+    # Decision Tree モデル学習
     # -------------------------
     dt = DecisionTreeClassifier(max_depth=5, random_state=42)
     dt.fit(X_train, y_train)
@@ -80,10 +76,10 @@ def train_models(X, y):
     # -------------------------
     # 성능 출력
     # -------------------------
-    print("=== KNN 모델 성능 ===")
+    print("=== KNN モデル性能 ===")
     print("Accuracy:", accuracy_score(y_test, knn_pred))
 
-    print("\n=== Decision Tree 모델 성능 ===")
+    print("\n=== Decision Tree モデル性能 ===")
     print("Accuracy:", accuracy_score(y_test, dt_pred))
     print("\nClassification Report:")
     print(classification_report(y_test, dt_pred))
@@ -92,12 +88,12 @@ def train_models(X, y):
 
 
 # ---------------------------------------------------------
-# 4) 모델 저장 함수
+# 4) モデル保存
 # ---------------------------------------------------------
 def save_model(model, path="models/model.pkl"):
     """
-    학습된 모델을 pickle 파일로 저장하는 함수.
-    Streamlit 앱에서 불러와서 예측에 사용함.
+    学習済みモデルをpickleファイルとして保存する関数
+    Streamlit アプリでロードし、推論に使用
     """
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "wb") as f:
@@ -105,35 +101,28 @@ def save_model(model, path="models/model.pkl"):
 
 
 # ---------------------------------------------------------
-# 5) 전체 파이프라인 실행 (선택)
+# 5) 全体パイプライン実行
 # ---------------------------------------------------------
 def run_training_pipeline():
-    """
-    전체 학습 파이프라인을 한 번에 실행하는 함수.
-    - 데이터 로드
-    - feature 준비
-    - 모델 학습
-    - 모델 저장
-    """
 
-    print("데이터 로드 중...")
+    print("データロード中...")
     df = load_data()
 
-    print("Feature 준비 중...")
+    print("Feature 準備中...")
     X, y, label_encoder = prepare_features(df)
 
-    print("모델 학습 중...")
+    print("モデル学習中...")
     knn_model, dt_model = train_models(X, y)
 
-    print("모델 저장 중...")
+    print("モデル保存中...")
     save_model(dt_model, "models/decision_tree.pkl")
     save_model(knn_model, "models/knn.pkl")
 
-    print("학습 완료!")
+    print("学習完了!")
 
 
 # ---------------------------------------------------------
-# 6) 직접 실행 시 동작
+# 6) 直接実行
 # ---------------------------------------------------------
 if __name__ == "__main__":
     run_training_pipeline()

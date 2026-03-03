@@ -5,21 +5,21 @@ from feature_engineering import add_features
 import os
 
 def run_data_pipeline():
-    print("1) 샘플 데이터 생성 중...")
+    print("1) サンプルデータを作成中...")
     df = generate_sample_health_data()
     save_raw_data(df, "../data/raw/health_data.csv")
 
-    print("2) 전처리(라벨링) 적용 중...")
+    print("2) 前処理（ラベリング）を適用中...")
     df = preprocess_data(df)
 
-    print("3) Feature Engineering 적용 중...")
+    print("3) Feature Engineering適用中...")
     df = add_features(df)
 
-    print("4) 최종 데이터 저장 중...")
+    print("4) 最終データの保存中...")
     os.makedirs("../data/processed", exist_ok=True)
     df.to_csv("../data/processed/health_data_processed.csv", index=False)
 
-    print("데이터 파이프라인 완료!")
+    print("データパイプライン処理完了!")
 
 if __name__ == "__main__":
     run_data_pipeline()

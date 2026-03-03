@@ -2,9 +2,9 @@ import pandas as pd
 import numpy as np
 import os
 
-#200명 건강데이터 샘플로 만들기
+#200人　健康データサンプル
 def generate_sample_health_data(n=200):
-    #seed를 고정하면 항상 같은 값이 생성됨
+    #seedを固定するといつも同じ値
     np.random.seed(42)
 
     data = {
